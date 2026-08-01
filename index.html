@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>TOP EDIT - Video Processor</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #121212; color: #fff; text-align: center; padding: 50px; }
+        .card { background: #1e1e1e; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 400px; }
+        input[type="file"] { margin: 20px 0; color: #fff; }
+        button { background: #ff0050; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #status { margin-top: 20px; font-size: 14px; color: #aaa; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>TOP EDIT</h2>
+        <p>בחר קובץ וידאו לעיבוד מהיר</p>
+        <input type="file" id="fileInput" accept="video/mp4">
+        <br>
+        <button id="patchBtn" disabled>החל עיבוד והורד</button>
+        <div id="status">מוכן לעבודה</div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const patchBtn = document.getElementById('patchBtn');
+        const statusEl = document.getElementById('status');
+        let selectedFile = null;
+
+        fileInput.addEventListener('change', (e) => {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                patchBtn.disabled = false;
+                statusEl.textContent = `נבחר קובץ: ${selectedFile.name}`;
+            } else {
+                patchBtn.disabled = true;
+                statusEl.textContent = 'מוכן לעבודה';
+            }
+        });
+
+        patchBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            patchBtn.disabled = true;
+            statusEl.textContent = 'מעבד קובץ, אנא המתן...';
+
+            const formData = new FormData();
+            formData.append('video', selectedFile);
+
+            try {
+                const response = await fetch('/process-video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('שגיאה בעיבוד הקובץ');
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                
+                // שינוי שם הקובץ המורד לפי דרישת המותג
+                a.download = `${selectedFile.name.replace(/\.[^/.]+$/, '')}_Top Edit.mp4`;
+                
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                
+                statusEl.textContent = 'ההורדה הוצלחה!';
+            } catch (err) {
+                statusEl.textContent = `שגיאה: ${err.message}`;
+            } finally {
+                patchBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
