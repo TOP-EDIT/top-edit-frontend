@@ -48,8 +48,8 @@
             formData.append('video', selectedFile);
 
             try {
-                // שים לב: פנייה ישירה לשרת המקומי שרץ על המחשב
-                const response = await fetch('http://localhost:3000/process-video', {
+                // פנייה לשרת המקומי דרך נתיב יחסי נקי
+                const response = await fetch('/process-video', {
                     method: 'POST',
                     body: formData
                 });
